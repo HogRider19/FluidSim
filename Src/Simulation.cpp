@@ -14,11 +14,29 @@ struct Point
     float VelY = 0;
 };
 
+class Gradient
+{
+public:
+    void Update(float w, float h, std::vector<Point>& points)
+    {
+
+    }
+
+    void GetAt(float posX, float posY, float& resX, float& resY)
+    {
+        resX = 0;
+        resY = 0;
+    }
+};
+
 class Simulation
 {
 public:
     const float RatioFactor = 1;
+    const float Viscosity = 0.003;
+    const float Gravity = 0.00;
     std::vector<Point> Points;
+    Gradient gradient;
 
     Simulation(float w = 100, float h = 100, float pointsCount = 10)
     {
@@ -30,9 +48,13 @@ public:
 
     void Display()
     {
+        gradient.Update(width, height, Points);
+        for (Point& p : Points)
+        {
+            Move(p);
+            DisplayPoint(p.X, p.Y);
+        }
         ConstrainPoints();
-        for (int i = 0; i < pointsCount; i++)
-            DisplayPoint(Points[i].X, Points[i].Y);
     }
 
     void SetDimention(float w, float h)
@@ -45,6 +67,24 @@ private:
     float width = 100;
     float height = 100;
     int pointsCount = 10;
+
+    void Move(Point& point)
+    {
+        point.X += point.VelX;
+        point.Y += point.VelY;
+
+        point.VelX *= point.X >= width || point.X <= 0 ? -1 : 1;
+        point.VelY *= point.Y >= height || point.Y <= 0 ? -1 : 1;
+
+        point.VelX *= (1 - Viscosity);
+        point.VelY *= (1 - Viscosity);
+
+        point.VelY -= Gravity;
+
+        float gX; float gY;
+        gradient.GetAt(point.X, point.Y, gX, gY);
+        point.VelX += gX; point.VelY += gY; 
+    }
 
     void DisplayPoint(float posX, float posY)
     {
@@ -61,7 +101,7 @@ private:
         for (int i = 0; i < pointsCount; i++)
         {
             Points[i].X = constraint(Points[i].X, 0, width);
-            Points[i].Y = constraint(Points[i].Y, 0, width);
+            Points[i].Y = constraint(Points[i].Y, 0, height);
         }
     }
 
@@ -71,6 +111,8 @@ private:
         {
             Points[i].X = getRandom(0, width);
             Points[i].Y = getRandom(0, height);
+            Points[i].VelX = getRandom(-4, 4);
+            Points[i].VelY = getRandom(-4, 4);
         }
     }
 };
