@@ -6,21 +6,25 @@
 #include <iostream>
 #include "Utils.h"
 
+struct Point
+{   
+    float X    = 0;
+    float Y    = 0;
+    float VelX = 0;
+    float VelY = 0;
+};
+
 class Simulation
 {
 public:
     const float RatioFactor = 1;
-
-    std::vector<float> xs;
-    std::vector<float> ys;
+    std::vector<Point> Points;
 
     Simulation(float w = 100, float h = 100, float pointsCount = 10)
     {
         this->pointsCount = pointsCount;
-        xs = std::vector<float>(pointsCount);
-        ys = std::vector<float>(pointsCount);
-        width = w;
-        height = h;
+        Points = std::vector<Point>(pointsCount);
+        width = w; height = h;
         RandomInit();
     }
 
@@ -28,9 +32,7 @@ public:
     {
         ConstrainPoints();
         for (int i = 0; i < pointsCount; i++)
-        {
-            DisplayPoint(xs[i], ys[i]);
-        }
+            DisplayPoint(Points[i].X, Points[i].Y);
     }
 
     void SetDimention(float w, float h)
@@ -47,21 +49,19 @@ private:
     void DisplayPoint(float posX, float posY)
     {
         glLoadIdentity();
-        //glTranslatef(posX * 2 / width - 1, posY * 2 / height - 1, 0.0f);
         glColor3f(0.0f, 0.0f, 1.0f);
         glPointSize(10);
         glBegin(GL_POINTS);
         glVertex2f(posX * 2 / width - 1, posY * 2 / height - 1);
         glEnd();
-        //glutSolidSphere(0.01, 5, 5);  
     }
 
     void ConstrainPoints()
     {
         for (int i = 0; i < pointsCount; i++)
         {
-            xs[i] = constraint(xs[i], 0, width);
-            ys[i] = constraint(ys[i], 0, height);
+            Points[i].X = constraint(Points[i].X, 0, width);
+            Points[i].Y = constraint(Points[i].Y, 0, width);
         }
     }
 
@@ -69,8 +69,8 @@ private:
     {
         for (int i = 0; i < pointsCount; i++)
         {
-            xs[i] = getRandom(0, width);
-            ys[i] = getRandom(0, height);
+            Points[i].X = getRandom(0, width);
+            Points[i].Y = getRandom(0, height);
         }
     }
 };
