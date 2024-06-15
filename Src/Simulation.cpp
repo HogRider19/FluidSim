@@ -4,39 +4,20 @@
 #include <stdio.h>
 #include <vector>
 #include <iostream>
+#include <cmath>
 #include "Utils.h"
+#include "Point.h"
+#include "Gradient.cpp"
 
-struct Point
-{   
-    float X    = 0;
-    float Y    = 0;
-    float VelX = 0;
-    float VelY = 0;
-};
-
-class Gradient
-{
-public:
-    void Update(float w, float h, std::vector<Point>& points)
-    {
-
-    }
-
-    void GetAt(float posX, float posY, float& resX, float& resY)
-    {
-        resX = 0;
-        resY = 0;
-    }
-};
 
 class Simulation
 {
 public:
     const float RatioFactor = 1;
     const float Viscosity = 0.003;
-    const float Gravity = 0.00;
+    const float Gravity = 0.01;
     std::vector<Point> Points;
-    Gradient gradient;
+    Gradient gradient = Gradient();
 
     Simulation(float w = 100, float h = 100, float pointsCount = 10)
     {
@@ -49,6 +30,7 @@ public:
     void Display()
     {
         gradient.Update(width, height, Points);
+        //DrawSpace();
         for (Point& p : Points)
         {
             Move(p);
@@ -83,7 +65,35 @@ private:
 
         float gX; float gY;
         gradient.GetAt(point.X, point.Y, gX, gY);
-        point.VelX += gX; point.VelY += gY; 
+        //point.VelX += gX; point.VelY += gY; 
+    }
+
+    void DrawSpace()
+    {
+        float step = 10;
+        for (float x = 0; x < width; x += step)
+        {
+            for (float y = 0; y < height; y += step)
+            {
+                float d = gradient.GetDensity(x, y);
+                glColor3f(0, 0.0f, d);
+                glPointSize(step);
+                glBegin(GL_POINTS);
+                glVertex2f(x * 2 / width - 1, y * 2 / height - 1);
+                glEnd();
+
+                float gx; float gy;
+                gradient.GetAt(x, y, gx, gy);
+                float c = 200;
+                gx *= c; gy *= c;
+
+                // glColor3f(255, 0.0f, 0);
+                // glBegin(GL_LINES);
+                // glVertex2f(x * 2 / width - 1, y * 2 / height - 1);
+                // glVertex2f((x + gx) * 2 / width - 1, (y + gy) * 2 / height - 1);
+                // glEnd();
+            }
+        }
     }
 
     void DisplayPoint(float posX, float posY)
@@ -111,8 +121,10 @@ private:
         {
             Points[i].X = getRandom(0, width);
             Points[i].Y = getRandom(0, height);
-            Points[i].VelX = getRandom(-4, 4);
-            Points[i].VelY = getRandom(-4, 4);
+            // Points[i].VelX = getRandom(-4, 4);
+            // Points[i].VelY = getRandom(-4, 4);
+            Points[i].VelX = getRandom(-0.4, 0.4);
+            Points[i].VelY = getRandom(-0.4, 0.4);
         }
     }
 };
