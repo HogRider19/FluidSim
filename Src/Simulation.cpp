@@ -29,14 +29,14 @@ public:
 
     void Display()
     {
-        gradient.Update(width, height, Points);
-        //gradient.DrawSpace(10);
+        gradient.Update(width, height, 100, Points);
+        //gradient.DrawSpace(15, false);
         for (Point& p : Points)
         {
             Move(p);
             HandleBorders(p);
             HandleSpace(p);
-            //HandleGradient(p);
+            HandleGradient(p);
             DisplayPoint(p.X, p.Y);
         }
         ConstrainPoints();
@@ -74,9 +74,9 @@ private:
 
     void HandleGradient(Point& point)
     {
-        float gX; float gY;
-        gradient.GetAt(point.X, point.Y, gX, gY);
-        point.VelX += gX; point.VelY += gY; 
+        float mult = 1000;
+        vec2 grad = gradient.GetDensityGradient(point.X, point.Y, 0.1);
+        point.VelX -= grad.X * mult; point.VelY -= grad.Y * mult; 
     }
 
     void DisplayPoint(float posX, float posY)
@@ -104,8 +104,8 @@ private:
         {
             Points[i].X = getRandom(0, width);
             Points[i].Y = getRandom(0, height);
-            Points[i].VelX = getRandom(-2, 2);
-            Points[i].VelY = getRandom(-2, 2);
+            Points[i].VelX = getRandom(0, 0);
+            Points[i].VelY = getRandom(0, 0);
         }
     }
 };

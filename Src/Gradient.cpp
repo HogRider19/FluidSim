@@ -1,5 +1,7 @@
 #include <GL/glut.h>
 #include <stdio.h>
+#include <iostream>
+#include <algorithm>
 #include <vector>
 #include <cmath>
 #include "Utils.h"
@@ -9,65 +11,83 @@
 class Gradient
 {
 public:
-    void Update(float w, float h, std::vector<Point>& points)
+    void Update(float w, float h, float sr, std::vector<Point>& points)
     {
-        smoothingRadius = std::min(w, h) / 5;
+        smoothingRadius = sr;
         this->points = points;
         this->width = w;
         this->height = h;
     }
 
-    void GetAt(float posX, float posY, float& resX, float& resY)
+    vec2 GetDensityGradient(float posX, float posY, float step = 10)
     {
-        float step = 10;
         float currentDen = GetDensity(posX, posY);
-        resX = currentDen - GetDensity(posX + step, posY);
-        resY = currentDen - GetDensity(posX, posY + step);
+        float dx = GetDensity(posX + step, posY) - currentDen;
+        float dy = GetDensity(posX, posY + step) - currentDen;
+        return vec2(dx / step, dy / step);
     }
 
     float GetDensity(float x, float y)
     {
         float den = 0;
-        for (Point p : points)
+        const float mass = 1;
+
+        for (const Point& p : points)
         {
             float d = getDist(x, y, p.X, p.Y);
-            if (d <= 3) continue;
-            if (d <= smoothingRadius)
-                den += 1 / d;
+            float influen = SmoothingVoluem(smoothingRadius, d);
+            den += mass * influen;
         }
+
         return den;
     }
 
-    void DrawSpace(float step = 10)
+    void DrawSpace(float step = 10, bool drawGradient = false)
     {
         for (float x = 0; x < width; x += step)
         {
             for (float y = 0; y < height; y += step)
             {
                 float d = GetDensity(x, y);
-                glColor3f(0, 0.0f, d);
+                glColor3f(0, 0.0f, d * 1000);
                 glPointSize(step);
                 glBegin(GL_POINTS);
                 glVertex2f(x * 2 / width - 1, y * 2 / height - 1);
                 glEnd();
 
-                float gx; float gy;
-                GetAt(x, y, gx, gy);
-                float c = 200;
-                gx *= c; gy *= c;
-
-                // glColor3f(255, 0.0f, 0);
-                // glBegin(GL_LINES);
-                // glVertex2f(x * 2 / width - 1, y * 2 / height - 1);
-                // glVertex2f((x + gx) * 2 / width - 1, (y + gy) * 2 / height - 1);
-                // glEnd();
+                if (drawGradient)
+                {
+                    float c = 1000000;
+                    vec2 grad = GetDensityGradient(x, y, 0.1);
+                    glBegin(GL_LINES);
+                    glColor3f(0, 255, 0);
+                    glVertex2f(x * 2 / width - 1, y * 2 / height - 1);
+                    glColor3f(255, 0, 0);
+                    glVertex2f((x + grad.X * c) * 2 / width - 1, (y + grad.Y * c) * 2 / height - 1);
+                    glEnd();
+                }
             }
         }
     }
 
 private:
-    float smoothingRadius = 10;
     std::vector<Point> points;
+    float smoothingRadius = 10;
     float width = 100;
     float height = 100;
+
+    float SmoothingVoluem(float radius, float dist)
+    {
+        float voluem = M_PI * pow(radius, 8) / 4;
+        float val = std::max(0.0f, radius * radius - dist * dist);
+        return val * val * val / voluem;
+    }
+
+    float SmoothingVoluemDeriv(float radius, float dist)
+    {
+        if (dist >= radius) return 0;
+        float f = radius * radius - dist * dist;
+        float scale = -24 / (M_PI * pow(radius, 8));
+        return scale * dist * f * f;
+    }
 };

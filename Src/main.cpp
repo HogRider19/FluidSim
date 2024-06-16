@@ -7,7 +7,7 @@
 #include "Simulation.cpp"
 
 
-static Simulation sim = Simulation(800, 600, 200);
+static Simulation sim = Simulation(800, 600, 1000);
 
 void drawFPS() 
 {
